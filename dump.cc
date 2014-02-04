@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 #include <sys/mman.h>
 
 #include <vector>
@@ -54,6 +56,18 @@ static void print_error(const char* msg, int dwarf_code, Dwarf_Error err) {
     } else {
         fprintf(stderr, "InternalError:  %s:  code %d\n", msg, dwarf_code);
     }
+}
+
+static bool is_readable(void *ptr) {
+    int fd[2];
+    if (pipe(fd)) {
+        perror("pipe(2) failed");
+        exit(1);
+    }
+    bool readable = (write(fd[1], ptr, 1) == 1);
+    close(fd[0]);
+    close(fd[1]);
+    return readable;
 }
 
 struct DwarfException {};
@@ -601,11 +615,7 @@ public:
     virtual void dump(void* p) {
         void** vp = (void**)p;
 
-        if (mprotect((void*)(((*(int*)p)+4095)&~4095-4096), 4096,
-                     PROT_READ | PROT_EXEC | PROT_WRITE) != 0 &&
-            mprotect((void*)(((*(int*)p)+4095)&~4095-4096), 4096,
-                     PROT_READ | PROT_EXEC) != 0)
-        {
+        if (!is_readable(p)) {
             printf("%p <invalid ptr>", *vp);
             return;
         }
@@ -1024,4 +1034,3 @@ extern "C" void dump_s(void* p, const char* name, const char* file, int line) {
     u->dump(p);
     printf(" : %s\n", u->name().c_str());
 }
-
