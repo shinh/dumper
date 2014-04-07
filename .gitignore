@@ -1,3 +1,6 @@
+test_dump
+test_dump_misc
+
 # Compiled Object files
 *.slo
 *.lo
