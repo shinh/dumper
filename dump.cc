@@ -159,6 +159,8 @@ namespace {
         if (ret == DW_DLV_NO_ENTRY) return 0;
         if (ret != DW_DLV_OK) {
             print_error("dwarf_highpc", ret, err);
+            return 0;  // TODO
+
             throw DwarfException();
         }
         return pc;
@@ -253,6 +255,13 @@ namespace {
         }
         ret = dwarf_loclist_n(attr, &loc, &size, &err);
         if (ret != DW_DLV_OK) {
+            // Fall back?
+            Dwarf_Unsigned l;
+            int r = dwarf_formudata(attr, &l, &err);
+            if (r == DW_DLV_OK) {
+                return l;
+            }
+
             print_error("dwarf_loclist_n", ret, err);
             throw DwarfException();
         }
@@ -329,6 +338,7 @@ public:
             int id = getType(die, DW_AT_specification, "specification");
             DumpUnit* u = id2unit[id];
             if (u) name_ = u->name();
+            else return;  // Ignore unnamed type.
         }
         types[name_] = this;
 
