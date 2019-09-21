@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-    int dump_open(const char* file_name);
+    int dump_open(const char* file_name, void* base_addr = nullptr);
 
     void dump(void* p, const char* type);
 

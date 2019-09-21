@@ -7,6 +7,10 @@
 
 #include "dump.h"
 
+#ifdef __PIE__
+extern char __executable_start[1];
+#endif
+
 typedef struct TestDump_ {
     short s;
     int i;
@@ -71,7 +75,12 @@ int main(int argc, char* argv[]) {
     d.dump = &d;
     strcpy(d.un.b, "abc");
 
-    dump_open(argv[0]);
+    void* base_addr = nullptr;
+#ifdef __PIE__
+    base_addr = __executable_start;
+#endif
+
+    dump_open(argv[0], base_addr);
 
     p(argc);
 //    pv(argc);

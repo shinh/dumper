@@ -41,7 +41,7 @@ static map<string, vector<variable> > variables;
 static set<void*> disp_ptrs;
 static char** srcfiles;
 static Dwarf_Signed srcnum;
-
+Dwarf_Addr base_addr;
 
 static void print_error(const char* msg, int dwarf_code, Dwarf_Error err) {
     if (dwarf_code == DW_DLV_ERROR) {
@@ -742,8 +742,10 @@ private:
 static void add_func(Dwarf_Die die) {
     func f;
     f.name = getName(die);
-    f.low = (void*)getLowPc(die);
-    f.high = (void*)getHighPc(die, (Dwarf_Addr)f.low);
+    Dwarf_Addr low = getLowPc(die);
+    low += base_addr;
+    f.low = (void*)low;
+    f.high = (void*)getHighPc(die, low);
     if (f.low && f.high) funcs.push_back(f);
 }
 
@@ -945,12 +947,14 @@ static int process_one_file(Elf* elf, const char* file_name, int archive) {
     return ret;
 }
 
-extern "C" int dump_open(const char* file_name) {
+extern "C" int dump_open(const char* file_name, void* ba) {
     int f;
     Elf_Cmd cmd;
     Elf *arf, *elf;
     int archive = 0;
     int ret = 0;
+
+    base_addr = (Dwarf_Addr)ba;
 
     elf_version(EV_NONE);
     if (elf_version(EV_CURRENT) == EV_NONE) {
