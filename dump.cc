@@ -643,7 +643,8 @@ public:
             }
         }
 
-        if (dynamic_cast<DumpPrim*>(u) && u->name() == "char") {
+        // For a string, `u` can be `DumpPrim` or `DumpCv`.
+        if (u->name() == "char") {
             dump_str(*(char**)p);
         }
         else if (dynamic_cast<DumpFunc*>(u)) {
