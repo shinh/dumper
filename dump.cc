@@ -146,26 +146,29 @@ namespace {
     static int getSize(Dwarf_Die die) {
         return getAttrInt(die, DW_AT_byte_size, "byte_size");
     }
- 
+
     static int getUpperBound(Dwarf_Die die) {
         return getAttrInt(die, DW_AT_upper_bound, "upper_bound");
     }
- 
-    static Dwarf_Addr getHighPc(Dwarf_Die die) {
+
+    static Dwarf_Addr getHighPc(Dwarf_Die die, Dwarf_Addr low_pc) {
         Dwarf_Addr pc;
         Dwarf_Error err;
         int ret;
-        ret = dwarf_highpc(die, &pc, &err);
+        Dwarf_Half form;
+        enum Dwarf_Form_Class cls;
+        ret = dwarf_highpc_b(die, &pc, &form, &cls, &err);
         if (ret == DW_DLV_NO_ENTRY) return 0;
+        if (form == DW_FORM_CLASS_CONSTANT) {
+            pc += low_pc;
+        }
         if (ret != DW_DLV_OK) {
             print_error("dwarf_highpc", ret, err);
-            return 0;  // TODO
-
             throw DwarfException();
         }
         return pc;
     }
- 
+
     static Dwarf_Addr getLowPc(Dwarf_Die die) {
         Dwarf_Addr pc;
         Dwarf_Error err;
@@ -178,7 +181,7 @@ namespace {
         }
         return pc;
     }
- 
+
     static string getName(Dwarf_Die die) {
         int ret;
         Dwarf_Error err;
@@ -740,7 +743,7 @@ static void add_func(Dwarf_Die die) {
     func f;
     f.name = getName(die);
     f.low = (void*)getLowPc(die);
-    f.high = (void*)getHighPc(die);
+    f.high = (void*)getHighPc(die, (Dwarf_Addr)f.low);
     if (f.low && f.high) funcs.push_back(f);
 }
 
