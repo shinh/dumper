@@ -15,6 +15,7 @@ typedef struct TestDump_ {
     unsigned long long ll;
     char c;
     const char* str;
+    const char** strp;
     void* ptr;
     void* const volatile * cvptr;
     struct TestDump_* dump;
@@ -61,6 +62,7 @@ int main(int argc, char* argv[]) {
     d.ll = 0xfffffffffffll;
     d.c = 'c';
     d.str = "hoge-";
+    d.strp = &d.str;
     d.ptr = &d;
     d.cvptr = &d.ptr;
     d.fp = main;
