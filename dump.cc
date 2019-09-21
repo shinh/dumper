@@ -1,6 +1,6 @@
 #include "dump.h"
 
-#include <libdwarf.h>
+#include <libdwarf/libdwarf.h>
 #include <dwarf.h>
 #include <libelf.h>
 #define HAVE_ELF64_GETEHDR
